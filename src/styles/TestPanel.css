@@ -1,0 +1,25 @@
+.test-panel{
+  height:250px;
+  width:275px;
+  margin-top:20px;
+  padding:10px;
+  border-radius:5px;
+  border:5px solid #34495E;
+}
+.test-panel .title {
+  font-weight:bold;
+}
+
+button {
+  cursor:pointer;
+  width:50%;
+  background: #E64939;
+  color:white;
+  border:none;
+  border-radius:5px;
+  padding:10px;
+}
+button[disabled] {
+  cursor: not-allowed;
+  background: #BDC3C7;
+}

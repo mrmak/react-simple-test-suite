@@ -20,12 +20,12 @@ class App extends Component {
 		super();
 		this.state = {
 			tests: [
-				{description: 'System Status',  id: 'unique_key1', didPass: null, count: 0, numSuccess: 0, run: generateTest()},
-				{description: 'Server1 Status', id: 'unique_key2', didPass: null, count: 0, numSuccess: 0, run: generateTest()},
-				{description: 'Server2 Status', id: 'unique_key3', didPass: null, count: 0, numSuccess: 0, run: generateTest()},
-				{description: 'Server3 Status', id: 'unique_key4', didPass: null, count: 0, numSuccess: 0, run: generateTest()},
-				{description: 'Server4 Status', id: 'unique_key5', didPass: null, count: 0, numSuccess: 0, run: generateTest()},
-				{description: 'Server5 Status', id: 'unique_key6', didPass: null, count: 0, numSuccess: 0, run: generateTest(),},
+				{description: 'System Status',  id: 'unique_key1', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
+				{description: 'Server1 Status', id: 'unique_key2', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
+				{description: 'Server2 Status', id: 'unique_key3', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
+				{description: 'Server3 Status', id: 'unique_key4', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
+				{description: 'Server4 Status', id: 'unique_key5', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
+				{description: 'Server5 Status', id: 'unique_key6', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest(),},
 			],
 		};
 	}
@@ -48,7 +48,10 @@ class App extends Component {
 		let { didPass, count, numSuccess } = obj;
 
 		this.toggleTestButtonStatus(button);
+		let timeStarted = new Date();
 		run().then((response) => {
+			let timeEnded = new Date();
+			let runTime = (timeEnded.getTime() - timeStarted.getTime()) / 1000;
 			count += 1;
 			didPass = response;
 			if (response) {
@@ -58,7 +61,8 @@ class App extends Component {
 			obj.count = count;
 			obj.didPass = didPass;
 			obj.numSuccess = numSuccess;
-			this.setState({ obj } );
+			obj.lastRunTime = runTime;
+			this.setState({ obj });
 			this.toggleTestButtonStatus(button);
 		});
 	}
@@ -70,12 +74,13 @@ class App extends Component {
 		const testPanels = [];
 		const tests = this.state.tests;
 		for (let i = 0; i < tests.length; i += 1) {
-			const { description, id, didPass, count, numSuccess } = tests[i];
+			const { description, id, didPass, lastRunTime, count, numSuccess } = tests[i];
 			testPanels.push(<TestPanel 
 				key={id}
 				id={id}
 				description={description}
 				didPass={didPass}
+				lastRunTime={lastRunTime}
 				count={count}
 				numSuccess={numSuccess}
 				onClick={e => { this.handleClick(e, id); }}

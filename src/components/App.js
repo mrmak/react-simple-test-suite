@@ -49,8 +49,8 @@ class App extends Component {
 		this.toggleTestButtonStatus(button);
 		let timeStarted = new Date();
 		test().then((response) => {
-			let timeEnded = new Date();
-			let runTime = (timeEnded.getTime() - timeStarted.getTime()) / 1000;
+			const timeEnded = new Date();
+			const runTime = (timeEnded.getTime() - timeStarted.getTime()) / 1000;
 			this.setState((prevState) => {
 				let testObj = prevState.tests;
 				let thisTestObj = {...testObj[index]}

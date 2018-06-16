@@ -2,15 +2,17 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import '../styles/TestPanel.css';
 
-const TestPanel = props => (
+const TestPanel = ({id, running, description, didPass, count, numSuccess, lastRunTime, onClick}) => (
 	<div className="test-panel">
-		<p className="title">{props.description}</p>
-		<p>Result: { props.didPass === null ? 'Awaiting test...' : props.didPass ? 'Passed' : 'Failed' }</p>
-		<p>Tests Completed: { props.count }</p>
-		<p>Tests Passed: { props.numSuccess }</p>
-		<p>Run Time: { props.lastRunTime === null ? 'N/A' : props.lastRunTime + 's'}</p>
-		<p>Success Rate: { isNaN(props.numSuccess/props.count) ? 0 : (props.numSuccess/props.count * 100).toFixed(2) }%</p>
-		<button className="test-button" onClick={ (e) => { props.onClick(e, props.id); }}>Run</button>
+		<p className="title">{description}</p>
+		<p>Result: { running ? 'Awaiting result' : didPass === null ? 'Awaiting test...' : didPass ? 'Passed' : 'Failed' }</p>
+		<p>Tests Completed: { count }</p>
+		<p>Tests Passed: { numSuccess }</p>
+		<p>Run Time: { lastRunTime === null ? 'N/A' : lastRunTime + 's'}</p>
+		<p>Success Rate: { isNaN(numSuccess / count) ? 0 : (numSuccess / count * 100).toFixed(2) }%</p>
+		<button className="test-button" disabled={running} onClick={(e) => onClick(e, id)}>
+			{running ? 'Running...' : 'Run'}
+		</button>
 	</div>
 );
 

@@ -2,100 +2,97 @@ import React, { Component } from 'react';
 import TestPanel from './TestPanel';
 import '../styles/App.css';
 
-function generateTest(baseDelay = 5000) {
-	return function runTest() {
-		const delay = baseDelay + (Math.random() * baseDelay);
-		const testPassed = Math.random() > 0.5;
-
-		return new Promise(function(resolve) {
-			setTimeout(function() {
-				resolve(testPassed);
-			}, delay);
-		});
-	};
+function generateTest(description, id, baseDelay = 5000) {
+	return {
+		description,
+		id,
+		running: false,
+		didPass: null,
+		count: 0,
+		numSuccess: 0,
+		lastRunTime: null,
+		run() {
+			const delay = baseDelay + Math.random() * baseDelay;
+			const testPassed = Math.random() > 0.5;
+			return new Promise(function(resolve) {
+				setTimeout(function() {
+					resolve(testPassed);
+				}, delay);
+			});
+		},
+	}
 }
 
 class App extends Component {
-	constructor() {
-		super();
-		this.state = {
-			tests: [
-				{description: 'System Status',  id: 'unique_key1', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
-				{description: 'Server1 Status', id: 'unique_key2', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
-				{description: 'Server2 Status', id: 'unique_key3', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
-				{description: 'Server3 Status', id: 'unique_key4', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
-				{description: 'Server4 Status', id: 'unique_key5', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest()},
-				{description: 'Server5 Status', id: 'unique_key6', didPass: null, count: 0, numSuccess: 0, lastRunTime: null, run: generateTest(),},
-			],
-		};
-	}
-	runAllTests(){
-		// Run any test that is currently not running
-		const runTestButtons = document.getElementsByClassName('test-button');
+	state = {
+		tests: [
+			generateTest('System Status', 'unique_key1'),
+			generateTest('Server1 Status', 'unique_key2'),
+			generateTest('Server2 Status', 'unique_key3'),
+			generateTest('Server3 Status', 'unique_key4'),
+			generateTest('Server4 Status', 'unique_key5'),
+			generateTest('Server5 Status', 'unique_key6'),
+		],
+	};
 
-		for (let i = 0; i < runTestButtons.length; i++){
-			if (!runTestButtons[i].disabled){
-				runTestButtons[i].click();
-			}
+	getTestAndIndex(id, tests) {
+		const index = tests.findIndex(obj => obj.id === id);
+		const test = tests[index];
+		return {index, test};
+	}
+
+	runAllTests() {
+		this.state.tests.forEach(({id}) => this.runTest(id));
+	}
+
+	runTest(id){
+		const {tests} = this.state;
+		let {index, test} = this.getTestAndIndex(id, tests);
+		if (test.running) {
+			return console.log(`Test: ${id} is already running`);
 		}
-	}
-	handleClick(e, id){
-		const testIndex = this.state.tests.findIndex(obj => obj.id === id);
-		this.runTest(this.state.tests[testIndex].run, testIndex, e.target);
-	}
-	runTest(func, index, button){
-		const test = func;
-
-		this.toggleTestButtonStatus(button);
 		let timeStarted = new Date();
-		test().then((response) => {
+		test = {...test};
+		test.running = true;
+		tests[index] = test;
+		this.setState({tests});
+		test.run().then((response) => {
 			const timeEnded = new Date();
 			const runTime = (timeEnded.getTime() - timeStarted.getTime()) / 1000;
-			this.setState((prevState) => {
-				let testObj = prevState.tests;
-				let thisTestObj = {...testObj[index]}
-				thisTestObj.count++;
-				thisTestObj.didPass = response;
-				thisTestObj.numSuccess = response ? thisTestObj.numSuccess++ : false;
-				thisTestObj.lastRunTime = runTime;
-				testObj[index] = thisTestObj;
-				return {
-					tests: testObj,
-				}
+			this.setState((state) => {
+				const {tests} = state;
+				let {index, test} = this.getTestAndIndex(id, tests);
+				test = {...test};
+				test.count++;
+				test.didPass = response;
+				test.numSuccess = response ? test.numSuccess + 1 : false;
+				test.lastRunTime = runTime;
+				test.running = false;
+				tests[index] = test;
+				return {tests}
 			});
-			this.toggleTestButtonStatus(button);
 		});
 	}
-	toggleTestButtonStatus(button){
-		button.disabled = button.disabled ? false : true;
-		button.innerHTML = button.innerHTML === 'Run' ? 'Running...' : 'Run';
-	}
+
+	handleAllTestsClick = (event) => {
+		event.preventDefault();
+		this.runAllTests();
+	};
+
+	handleTestClick = (event, id) => {
+		event.preventDefault();
+		this.runTest(id);
+	};
+
 	render() {
-		const testPanels = [];
-		const tests = this.state.tests;
-		console.log(tests);
-		for (let i = 0; i < tests.length; i += 1) {
-			const { description, id, didPass, lastRunTime, count, numSuccess } = tests[i];
-			testPanels.push(<TestPanel 
-				key={id}
-				id={id}
-				description={description}
-				didPass={didPass}
-				lastRunTime={lastRunTime}
-				count={count}
-				numSuccess={numSuccess}
-				onClick={e => { this.handleClick(e, id); }}
-			/>);
-		}
-		
 		return (
 			<div className="App">
 				<header className="App-header">
 					<h1 className="App-title">System Test Dashboard</h1>
-					<button onClick={() => { this.runAllTests(); }} >Run All Tests</button>
+					<button onClick={this.handleAllTestsClick} >Run All Tests</button>
 				</header>
 				<div className="test-container">
-					{ testPanels }
+					{this.state.tests.map(props => <TestPanel {...props} key={props.id} onClick={this.handleTestClick} />)}
 				</div>
 			</div>
 		);

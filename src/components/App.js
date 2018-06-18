@@ -41,28 +41,28 @@ class App extends Component {
 	}
 	handleClick(e, id){
 		const testIndex = this.state.tests.findIndex(obj => obj.id === id);
-		this.runTest(this.state.tests[testIndex], id, e.target);
+		this.runTest(this.state.tests[testIndex].run, testIndex, e.target);
 	}
-	runTest(obj, id, button){
-		const { run } = obj;
-		let { didPass, count, numSuccess } = obj;
+	runTest(func, index, button){
+		const test = func;
 
 		this.toggleTestButtonStatus(button);
 		let timeStarted = new Date();
-		run().then((response) => {
-			let timeEnded = new Date();
-			let runTime = (timeEnded.getTime() - timeStarted.getTime()) / 1000;
-			count += 1;
-			didPass = response;
-			if (response) {
-				numSuccess += 1;
-			}
-			obj.id = id;
-			obj.count = count;
-			obj.didPass = didPass;
-			obj.numSuccess = numSuccess;
-			obj.lastRunTime = runTime;
-			this.setState({ obj });
+		test().then((response) => {
+			const timeEnded = new Date();
+			const runTime = (timeEnded.getTime() - timeStarted.getTime()) / 1000;
+			this.setState((prevState) => {
+				let testObj = prevState.tests;
+				let thisTestObj = {...testObj[index]}
+				thisTestObj.count++;
+				thisTestObj.didPass = response;
+				thisTestObj.numSuccess = response ? thisTestObj.numSuccess++ : false;
+				thisTestObj.lastRunTime = runTime;
+				testObj[index] = thisTestObj;
+				return {
+					tests: testObj,
+				}
+			});
 			this.toggleTestButtonStatus(button);
 		});
 	}
@@ -73,6 +73,7 @@ class App extends Component {
 	render() {
 		const testPanels = [];
 		const tests = this.state.tests;
+		console.log(tests);
 		for (let i = 0; i < tests.length; i += 1) {
 			const { description, id, didPass, lastRunTime, count, numSuccess } = tests[i];
 			testPanels.push(<TestPanel 
